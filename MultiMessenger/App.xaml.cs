@@ -15,6 +15,7 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.StartScreen;
 
 namespace MultiMessenger
 {
@@ -29,8 +30,21 @@ namespace MultiMessenger
         {
             m_window = new MainWindow();
             m_window.Activate();
+
+            SetupJumpList();
         }
 
         private Window m_window;
+
+        private async void SetupJumpList()
+        {
+            var jumpList = await JumpList.LoadCurrentAsync();
+            jumpList.Items.Clear();
+
+            var item = JumpListItem.CreateWithArguments("exit", "Beenden");
+            jumpList.Items.Add(item);
+
+            await jumpList.SaveAsync();
+        }
     }
 }

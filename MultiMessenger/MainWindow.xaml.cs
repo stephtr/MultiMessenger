@@ -64,16 +64,24 @@ namespace MultiMessenger
             webView3.CoreWebView2Initialized += CoreWebView2Initialized;
         }
 
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsIconic(IntPtr hWnd);
         private void MainWindow_Closing(object sender, WindowClosingEventArgs e)
         {
-            e.TryCancel();
-            Minimize();
+            if (e.CloseReason == CloseReason.UserClosing && !IsIconic(Hwnd))
+            {
+                e.TryCancel();
+                Minimize();
+            }
         }
 
         private static string webViewInjection = Resources.WebViewInjection;
         private void CoreWebView2Initialized(WebView2 sender, CoreWebView2InitializedEventArgs args)
         {
             sender.CoreWebView2.Settings.IsWebMessageEnabled = true;
+            // activate mobile view once ready
+            // sender.CoreWebView2.Settings.UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/92.0.4501.0 Mobile/15E148 Safari/604.1";
             _ = sender.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(webViewInjection);
             sender.WebMessageReceived += WebMessageReceived;
             sender.CoreWebView2.PermissionRequested += CoreWebView2_PermissionRequested;
@@ -81,7 +89,13 @@ namespace MultiMessenger
 
         private void CoreWebView2_PermissionRequested(CoreWebView2 sender, CoreWebView2PermissionRequestedEventArgs args)
         {
-            throw new NotImplementedException();
+            if (args.IsUserInitiated)
+            {
+                switch (args.PermissionKind)
+                {
+                    case CoreWebView2PermissionKind.Microphone: args.State = CoreWebView2PermissionState.Allow; return;
+                }
+            }
         }
 
         private void WebMessageReceived(WebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)

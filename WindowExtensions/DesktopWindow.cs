@@ -2,7 +2,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-
 using WinRT;
 
 namespace WinUIExtensions.Desktop
@@ -28,13 +27,21 @@ namespace WinUIExtensions.Desktop
         }
     }
 
+    public enum CloseReason
+    {
+        None = 0,
+        UserClosing = 3,
+    }
+
     public class WindowClosingEventArgs : EventArgs
     {
         internal bool CancelClose { get; set; } = false;
         public DesktopWindow Window { get; private set; }
-        public WindowClosingEventArgs(DesktopWindow window)
+        public CloseReason CloseReason { get; private set; }
+        public WindowClosingEventArgs(DesktopWindow window, CloseReason closeReason)
         {
             Window = window;
+            CloseReason = closeReason;
         }
 
         public void TryCancel()
@@ -224,9 +231,9 @@ namespace WinUIExtensions.Desktop
         private IntPtr _hwnd = IntPtr.Zero;
         Orientation _currentOrientation;
 
-        private bool OnClosing()
+        private bool OnClosing(CloseReason closeReason)
         {
-            WindowClosingEventArgs windowClosingEventArgs = new(this);
+            var windowClosingEventArgs = new WindowClosingEventArgs(this, closeReason);
             Closing.Invoke(this, windowClosingEventArgs);
             return !windowClosingEventArgs.CancelClose;
         }
@@ -235,7 +242,7 @@ namespace WinUIExtensions.Desktop
         {
             var windowPosition = GetWindowPositionWin32(_hwnd);
             //windowPosition comes in pixels(Win32), so you need to convert into epx
-            WindowMovingEventArgs windowMovingEventArgs = new(this,
+            var  windowMovingEventArgs = new WindowMovingEventArgs(this,
                 new WindowPosition(
                     DisplayInformation.ConvertPixelToEpx(_hwnd, windowPosition.Top),
                     DisplayInformation.ConvertPixelToEpx(_hwnd, windowPosition.Left)));
@@ -318,6 +325,7 @@ namespace WinUIExtensions.Desktop
             public PInvoke.POINT ptMaxTrackSize;
         }
 
+        private CloseReason lastCloseReason = CloseReason.None;
         private IntPtr NewWindowProc(IntPtr hWnd, PInvoke.User32.WindowMessage Msg, IntPtr wParam, IntPtr lParam)
         {
             switch (Msg)
@@ -331,9 +339,18 @@ namespace WinUIExtensions.Desktop
                     Marshal.StructureToPtr(minMaxInfo, lParam, true);
                     break;
 
-                case PInvoke.User32.WindowMessage.WM_CLOSE:
+                case PInvoke.User32.WindowMessage.WM_SYSCOMMAND:
+                    if((int)wParam == (int)PInvoke.User32.SysCommands.SC_CLOSE)
+                    {
+                        lastCloseReason = CloseReason.UserClosing;
+                    }
+                    break;
 
-                    if (this.Closing is not null && !OnClosing())
+
+                case PInvoke.User32.WindowMessage.WM_CLOSE:
+                    var reason = lastCloseReason;
+                    lastCloseReason = CloseReason.None;
+                    if (this.Closing is not null && !OnClosing(reason))
                     {
                         return IntPtr.Zero;
                     }
