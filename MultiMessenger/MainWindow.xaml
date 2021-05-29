@@ -1,0 +1,34 @@
+﻿<WinUI:DesktopWindow
+    x:Class="MultiMessenger.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MultiMessenger"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:WinUI="using:WinUIExtensions.Desktop"
+    
+    mc:Ignorable="d">
+
+    <TabView CloseButtonOverlayMode="OnPointerOver" CanReorderTabs="True" VerticalAlignment="Stretch">
+        <TabView.TabStripHeader>
+            <Grid x:Name="ShellTitlebarInset" Background="Transparent" />
+        </TabView.TabStripHeader>
+        <TabView.TabStripFooter>
+            <Grid x:Name="CustomDragRegion" Background="Transparent" Height="40" />
+        </TabView.TabStripFooter>
+        <TabView.TabItems>
+            <TabViewItem Header="WhatsApp">
+                <TabViewItem.IconSource>
+                    <FontIconSource FontFamily="/Resources/fa-brands-400.ttf#Font Awesome 5 Brands Regular" Glyph="&#xf232;" />
+                </TabViewItem.IconSource>
+                <WebView2 x:Name="webView1" Source="https://web.whatsapp.com/" />
+            </TabViewItem>
+            <TabViewItem Header="Messenger">
+                <WebView2 x:Name="webView2" Source="https://www.messenger.com/login/" />
+            </TabViewItem>
+            <TabViewItem Header="Instagram">
+                <WebView2 x:Name="webView3" Source="https://www.instagram.com/direct/inbox/" />
+            </TabViewItem>
+        </TabView.TabItems>
+    </TabView>
+</WinUI:DesktopWindow>
