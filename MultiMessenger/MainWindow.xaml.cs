@@ -7,6 +7,8 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using CommunityToolkit.WinUI.Notifications;
 using Microsoft.UI.Xaml;
@@ -113,7 +115,7 @@ namespace MultiMessenger
             }
         }
 
-        private IDictionary<string, ToastNotification> NotificationList = new Dictionary<string, ToastNotification>();
+        private IDictionary<string, (ToastNotification, WebView2)> NotificationList = new Dictionary<string, (ToastNotification, WebView2)>();
         private IDictionary<string, int> UnreadMessages = new Dictionary<string, int>();
         private void WebMessageReceived(WebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
         {
@@ -126,29 +128,45 @@ namespace MultiMessenger
                         var service = sender.Tag as string;
 
                         var whatsAppIconPrefix = "https://web.whatsapp.com/pp?e=";
-                        if (message.icon.StartsWith(whatsAppIconPrefix))
+                        if (message.icon != null && message.icon.StartsWith(whatsAppIconPrefix))
                         {
                             message.icon = HttpUtility.UrlDecode(message.icon.Substring(whatsAppIconPrefix.Length));
                         }
 
                         var notificationContent = new ToastContentBuilder()
-                            .AddAppLogoOverride(new Uri(message.icon))
                             .AddText(message.title)
-                            .AddText(message.body)
-                            .AddAttributionText(service)
-                            .GetToastContent();
-                        var notification = new ToastNotification(notificationContent.GetXml());
+                            .AddAttributionText(service);
+                        if (message.body != null) notificationContent.AddText(message.body);
+                        if (message.icon != null) notificationContent.AddAppLogoOverride(new Uri(message.icon));
+                        var notification = new ToastNotification(notificationContent.GetToastContent().GetXml());
+                        notification.Group = service + "|" + message.title;
+                        notification.Tag = message.id;
+                        var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+                        notification.Activated += (ToastNotification sender, object args) =>
+                        {
+                            Task.Factory.StartNew(() =>
+                            {
+                                try
+                                {
+                                    var (_, webView) = NotificationList[sender.Tag];
+                                    webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { action = "notification.activated", id = sender.Tag }));
+                                }
+                                catch { }
+                            }, CancellationToken.None, TaskCreationOptions.None, scheduler);
+                        };
                         ToastNotificationManager.CreateToastNotifier().Show(notification);
-                        NotificationList[message.id] = notification;
+                        NotificationList[message.id] = (notification, sender);
                     }
                     break;
                 case "notification.close":
                     {
                         var message = JsonSerializer.Deserialize<WebCloseNotification>(args.WebMessageAsJson);
-                        if (NotificationList.TryGetValue(message.id, out var notification))
+                        try
                         {
+                            var (notification, _) = NotificationList[message.id];
                             ToastNotificationManager.CreateToastNotifier().Hide(notification);
                         }
+                        catch { }
                     }
                     break;
                 case "unreadMessages.update":
@@ -162,11 +180,20 @@ namespace MultiMessenger
             }
         }
 
+        private void Notification_Activated()
+        {
+            //try
+            //{
+
+            // }
+            //catch { }
+        }
+
         private int currentBadgeCount = 0;
         private void UpdateUnreadBadge()
         {
             var count = UnreadMessages.Values.Sum();
-            if(count != currentBadgeCount)
+            if (count != currentBadgeCount)
             {
                 return;
             }
