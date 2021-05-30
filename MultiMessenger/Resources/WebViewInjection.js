@@ -29,11 +29,9 @@ window.Notification.permission = 'granted';
 window.Notification.requestPermission = (cb) => cb('granted');
 
 window.chrome.webview.addEventListener('message', (ev) => {
-    debugger;
     switch (ev.data.action) {
         case 'notification.activated':
             {
-                debugger;
                 var notification = notifications[ev.data.id];
                 if (!notification) return;
                 notification.triggerClickEvent();
