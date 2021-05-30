@@ -184,7 +184,7 @@ namespace MultiMessenger
         private void UpdateUnreadBadge()
         {
             var count = UnreadMessages.Values.Sum();
-            if (count != currentBadgeCount)
+            if (currentBadgeCount == count)
             {
                 return;
             }
