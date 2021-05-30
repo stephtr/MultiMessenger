@@ -11,6 +11,8 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Resources\fa-brands-400.ttf" />
+    <None Remove="Resources\icon_blue.ico" />
+    <None Remove="Resources\icon_red.ico" />
     <None Remove="Resources\Logos\instagram.png" />
     <None Remove="Resources\Logos\messenger.png" />
     <None Remove="Resources\Logos\whatsapp.png" />
@@ -18,6 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\fa-brands-400.ttf" />
+    <Content Include="Resources\icon_blue.ico" />
+    <Content Include="Resources\icon_red.ico" />
     <Content Include="Resources\Logos\instagram.png" />
     <Content Include="Resources\Logos\messenger.png" />
     <Content Include="Resources\Logos\whatsapp.png" />

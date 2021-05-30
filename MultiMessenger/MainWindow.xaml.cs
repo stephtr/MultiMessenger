@@ -197,6 +197,7 @@ namespace MultiMessenger
             BadgeUpdateManager.CreateBadgeUpdaterForApplication().Update(badge);
 
             // TODO: add ITaskbarList3::SetOverlayIcon
+            Icon = "Resources/icon_" + (count > 0 ? "red" : "blue") + ".ico";
         }
     }
 }
