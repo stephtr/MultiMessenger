@@ -42,14 +42,28 @@ window.chrome.webview.addEventListener('message', (ev) => {
     }
 });
 
+var getUnreadConversationCount = null;
+
 if (location.href.startsWith('https://web.whatsapp.com/')) {
-    function updateUnread() {
-        // first, get all conversations with unread messages
-        var count = [].filter.call(document.querySelectorAll("#pane-side ._38M1B"),
-            // filter out muted conversations
-            (e) => !e.parentNode.parentNode.querySelectorAll('[data-icon=\"muted\"]').length
+    getUnreadConversationCount = () => {
+        var unreadMessageNodes = document.querySelectorAll("#pane-side ._38M1B");
+        // filter out muted conversations
+        return [].filter.call(unreadMessageNodes,
+            (el) => !el.parentNode.parentNode.querySelectorAll('[data-icon=\"muted\"]').length
         ).length;
-        window.chrome.webview.postMessage({ action: 'unreadMessages.update', count });
-    }
-    setInterval(updateUnread, 2500);
+    };
+}
+
+if (location.href.startsWith('https://www.messenger.com/')) {
+    getUnreadConversationCount = () => {
+        var conversations = document.querySelectorAll("[role='navigation'] [role='row']");
+        return [].map.call(conversations, (el) => (getComputedStyle(el.querySelector('span:first-child')).fontWeight >= 600 ? 1 : 0))
+            .reduce((sum, val) => sum + val, 0);
+    };
+}
+
+if (getUnreadConversationCount != null) {
+    setInterval(() => {
+        window.chrome.webview.postMessage({ action: 'unreadMessages.update', count: getUnreadConversationCount() });
+    }, 2500);
 }
