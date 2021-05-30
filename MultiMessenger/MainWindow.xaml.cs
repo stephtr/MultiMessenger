@@ -17,16 +17,31 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
+using Windows.Data.Xml.Dom;
 using Windows.UI.Notifications;
+using Windows.UI.Shell;
 using WinUIExtensions.Desktop;
 
 namespace MultiMessenger
 {
-    public class WebNotification
+    public class WebMessage
     {
+        public string action { get; set; }
+    }
+    public class WebNewNotification
+    {
+        public string id { get; set; }
         public string title { get; set; }
         public string body { get; set; }
         public string icon { get; set; }
+    }
+    public class WebCloseNotification
+    {
+        public string id { get; set; }
+    }
+    public class WebUpdateUnreadMessages
+    {
+        public int count { get; set; }
     }
 
     public sealed partial class MainWindow : DesktopWindow
@@ -98,25 +113,72 @@ namespace MultiMessenger
             }
         }
 
+        private IDictionary<string, ToastNotification> NotificationList = new Dictionary<string, ToastNotification>();
+        private IDictionary<string, int> UnreadMessages = new Dictionary<string, int>();
         private void WebMessageReceived(WebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
         {
-            var message = JsonSerializer.Deserialize<WebNotification>(args.WebMessageAsJson);
-
-            var whatsAppIconPrefix = "https://web.whatsapp.com/pp?e=";
-            if (message.icon.StartsWith(whatsAppIconPrefix))
+            var webMessage = JsonSerializer.Deserialize<WebMessage>(args.WebMessageAsJson);
+            switch (webMessage.action)
             {
-                message.icon = HttpUtility.UrlDecode(message.icon.Substring(whatsAppIconPrefix.Length));
+                case "notification.new":
+                    {
+                        var message = JsonSerializer.Deserialize<WebNewNotification>(args.WebMessageAsJson);
+                        var service = sender.Tag as string;
 
+                        var whatsAppIconPrefix = "https://web.whatsapp.com/pp?e=";
+                        if (message.icon.StartsWith(whatsAppIconPrefix))
+                        {
+                            message.icon = HttpUtility.UrlDecode(message.icon.Substring(whatsAppIconPrefix.Length));
+                        }
+
+                        var notificationContent = new ToastContentBuilder()
+                            .AddAppLogoOverride(new Uri(message.icon))
+                            .AddText(message.title)
+                            .AddText(message.body)
+                            .AddAttributionText(service)
+                            .GetToastContent();
+                        var notification = new ToastNotification(notificationContent.GetXml());
+                        ToastNotificationManager.CreateToastNotifier().Show(notification);
+                        NotificationList[message.id] = notification;
+                    }
+                    break;
+                case "notification.close":
+                    {
+                        var message = JsonSerializer.Deserialize<WebCloseNotification>(args.WebMessageAsJson);
+                        if (NotificationList.TryGetValue(message.id, out var notification))
+                        {
+                            ToastNotificationManager.CreateToastNotifier().Hide(notification);
+                        }
+                    }
+                    break;
+                case "unreadMessages.update":
+                    {
+                        var message = JsonSerializer.Deserialize<WebUpdateUnreadMessages>(args.WebMessageAsJson);
+                        var service = sender.Tag as string;
+                        UnreadMessages[service] = message.count;
+                        UpdateUnreadBadge();
+                    }
+                    break;
             }
+        }
 
-            var notificationContent = new ToastContentBuilder()
-                .AddAppLogoOverride(new Uri(message.icon))
-                .AddText(message.title)
-                .AddText(message.body)
-                .AddAttributionText("WhatsApp")
-                .GetToastContent();
-            var notification = new ToastNotification(notificationContent.GetXml());
-            ToastNotificationManager.CreateToastNotifier().Show(notification);
+        private int currentBadgeCount = 0;
+        private void UpdateUnreadBadge()
+        {
+            var count = UnreadMessages.Values.Sum();
+            if(count != currentBadgeCount)
+            {
+                return;
+            }
+            currentBadgeCount = count;
+
+            var badgeXml = BadgeUpdateManager.GetTemplateContent(BadgeTemplateType.BadgeNumber);
+            var badgeElement = badgeXml.SelectSingleNode("/badge") as XmlElement;
+            badgeElement.SetAttribute("value", count.ToString());
+            BadgeNotification badge = new BadgeNotification(badgeXml);
+            BadgeUpdateManager.CreateBadgeUpdaterForApplication().Update(badge);
+
+            // TODO: add ITaskbarList3::SetOverlayIcon
         }
     }
 }

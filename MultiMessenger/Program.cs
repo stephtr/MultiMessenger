@@ -9,7 +9,7 @@ namespace MultiMessenger
 {
     public static class Program
     {
-        [STAThreadAttribute]
+        [STAThread]
         static void Main(string[] args)
         {
             ComWrappersSupport.InitializeComWrappers();

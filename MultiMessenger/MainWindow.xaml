@@ -21,13 +21,13 @@
                 <TabViewItem.IconSource>
                     <FontIconSource FontFamily="/Resources/fa-brands-400.ttf#Font Awesome 5 Brands Regular" Glyph="&#xf232;" />
                 </TabViewItem.IconSource>
-                <WebView2 x:Name="webView1" Source="https://web.whatsapp.com/" />
+                <WebView2 x:Name="webView1" Source="https://web.whatsapp.com/" Tag="WhatsApp" />
             </TabViewItem>
             <TabViewItem Header="Messenger">
-                <WebView2 x:Name="webView2" Source="https://www.messenger.com/login/" />
+                <WebView2 x:Name="webView2" Source="https://www.messenger.com/login/" Tag="Messenger" />
             </TabViewItem>
             <TabViewItem Header="Instagram">
-                <WebView2 x:Name="webView3" Source="https://www.instagram.com/direct/inbox/" />
+                <WebView2 x:Name="webView3" Source="https://www.instagram.com/direct/inbox/" Tag="Instagram" />
             </TabViewItem>
         </TabView.TabItems>
     </TabView>
