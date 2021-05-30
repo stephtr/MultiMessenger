@@ -180,15 +180,6 @@ namespace MultiMessenger
             }
         }
 
-        private void Notification_Activated()
-        {
-            //try
-            //{
-
-            // }
-            //catch { }
-        }
-
         private int currentBadgeCount = 0;
         private void UpdateUnreadBadge()
         {
