@@ -55,9 +55,13 @@ if (location.href.startsWith('https://web.whatsapp.com/')) {
 if (location.href.startsWith('https://www.messenger.com/')) {
     getUnreadConversationCount = () => {
         var conversations = document.querySelectorAll("[role='navigation'] [role='row']");
-        return [].map.call(conversations, (el) => (getComputedStyle(el.querySelector('span:first-child')).fontWeight >= 600 ? 1 : 0))
+        return [].map.call(conversations, (el) => (+getComputedStyle(el.querySelector('span:first-child')).fontWeight >= 600 ? 1 : 0))
             .reduce((sum, val) => sum + val, 0);
     };
+}
+
+if (location.href.startsWith('https://www.instagram.com/')) {
+    getUnreadConversationCount = () => document.querySelectorAll("[style='height: 8px; width: 8px;']").length;
 }
 
 if (getUnreadConversationCount != null) {
