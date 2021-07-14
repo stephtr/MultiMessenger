@@ -28,10 +28,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.WinUI.Notifications" Version="7.0.2" />
-    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.0-preview" />
-    <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.8.0-preview" />
-    <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.8.0-preview" />
+    <PackageReference Include="CommunityToolkit.WinUI.Notifications" Version="7.0.3" />
+    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.1" />
+    <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.8.1" />
+    <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.8.1" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 

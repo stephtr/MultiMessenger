@@ -1,9 +1,9 @@
 ﻿using System;
 using Microsoft.UI.Xaml;
 using WinRT;
-using Microsoft.System;
 using System.Threading;
 using Windows.ApplicationModel;
+using Microsoft.UI.Dispatching;
 
 namespace MultiMessenger
 {
